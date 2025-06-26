@@ -1,3 +1,13 @@
 /venv
 /__pycache__
 /backend/.env
+frontend/eslint.config.js
+frontend/index.html
+frontend/package-lock.json
+frontend/package.json
+frontend/README.md
+frontend/vite.config.js
+frontend/public/vite.svg
+frontend/src/index.css
+frontend/src/main.jsx
+frontend/src/assets/react.svg
