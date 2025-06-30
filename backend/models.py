@@ -1,4 +1,4 @@
-from db import Base
+from .database import Base
 from sqlalchemy import Integer, Column, String
 
 # Modelo Book representa a tabela 'Books' no banco de dados
@@ -9,4 +9,4 @@ class Book(Base):
     title = Column(String, index=True)                   # Título do livro
     description = Column(String, index=True)             # Descrição do livro
     author = Column(String, index=True)                  # Autor do livro
-    year = Column(Integer)     
+    year = Column(Integer, index=True, nullable=True)    # Ano de publicação do livro

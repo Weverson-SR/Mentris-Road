@@ -1,6 +1,6 @@
-from models import Book
+from .models import Book
 from sqlalchemy.orm import Session
-from schemas import BookCreate
+from .schemas import BookCreate
 
 def create_book(db: Session, data: BookCreate):
     # Cria uma instância do modelo Book a partir dos dados recebidos

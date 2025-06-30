@@ -1,66 +1,163 @@
 import './App.css'
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // ✅ Adicionado useEffect
 
 function App() {
-  // Estados movidos para fora do componente BookManager
-  const [books, setBooks] = useState([
-    { id: 1, title: '1984', author: 'George Orwell', year: 1949 },
-    { id: 2, title: 'To Kill a Mockingbird', author: 'Harper Lee', year: 1960 },
-    { id: 3, title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', year: 1925 }
-  ]);
 
+  const [books, setBooks] = useState([]);
   const [searchId, setSearchId] = useState('');
   const [searchResult, setSearchResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [newBook, setNewBook] = useState({ title: '', author: '', year: '', description: ''});
   const [deleteId, setDeleteId] = useState('');
-  const [newBook, setNewBook] = useState({ title: '', author: '', year: '' });
   const [showAllBooks, setShowAllBooks] = useState(false);
-  const [nextId, setNextId] = useState(4);
 
-  // Corrigido o nome da função (era SerchById)
-  const handleSearchById = () => {
-    const id = parseInt(searchId);
-    const found = books.find(book => book.id === id);
-    setSearchResult(found || null);
-  };
+  const API_BASE_URL = 'http://localhost:8000'; // URL da API
 
-  // Corrigido a lógica de deletar (estava usando filter em vez de filtrar)
-  const handleDeleteBook = () => {
-    const id = parseInt(deleteId);
-    setBooks(books.filter(book => book.id !== id));
-    setDeleteId(''); // Corrigido o nome da função (era setDeleteID)
-    if (searchResult && searchResult.id === id) {
-      setSearchResult(null);
+  // ✅ Renomeado para fetchAllBooks (para coincidir com useEffect)
+  const fetchAllBooks = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/books/`);
+
+      if (!response.ok) {
+        throw new Error('Erro ao buscar livros');
+      }
+
+      const data = await response.json();
+      setBooks(data);
+    } catch (error) {
+      console.error('Erro ao buscar livros:', error);
+      alert('Erro ao buscar livros');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleCreateBook = () => {
-    if (newBook.title && newBook.author && newBook.year) {
-      const book = {
-        id: nextId,
-        title: newBook.title,
-        author: newBook.author,
-        year: parseInt(newBook.year)
-      };
-      setBooks([...books, book]);
-      setNewBook({ title: '', author: '', year: '' });
-      setNextId(nextId + 1);
+  // ✅ Função para mostrar/ocultar todos os livros
+  const toggleShowAllBooks = async () => {
+    if (!showAllBooks && books.length === 0) {
+      // Se vai mostrar e não tem livros carregados, busca da API
+      await fetchAllBooks();
     }
-  };
-
-  const toggleShowAllBooks = () => {
     setShowAllBooks(!showAllBooks);
   };
+
+  // ✅ Corrigido: lógica estava invertida
+  const handleSearchById = async () => {
+    if (!searchId) {
+      alert('Por favor, insira um ID válido.');
+      return;
+    }
+
+    setLoading(true); // ✅ Adicionado loading
+    try {
+      const response = await fetch(`${API_BASE_URL}/books/${searchId}`);
+
+      if (response.ok) { // ✅ Corrigido: era !response.ok
+        const book = await response.json();
+        setSearchResult(book);
+      } else if (response.status === 404) {
+        setSearchResult(null);
+        alert('Nenhum livro encontrado');
+      } else {
+        throw new Error('Erro ao buscar livro');
+      } 
+    } catch (error) {
+      console.error('Erro:', error);
+      alert('Erro ao buscar livro');
+      setSearchResult(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Corrigido: removido parâmetro não usado e adicionado loading
+  const handleCreateBook = async () => {
+    if (!newBook.title || !newBook.author || !newBook.year) {
+      alert('Por favor, preencha todos os campos.');
+      return;
+    }
+
+    setLoading(true); // ✅ Adicionado loading
+    try {
+      
+      const  bookToSend = {
+        ...newBook,
+        year: Number(newBook.year) // ✅ Garantindo que o ano seja um número
+      };
+
+      const response = await fetch(`${API_BASE_URL}/books/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bookToSend),
+      });
+
+      if (response.ok) {
+        const createdBook = await response.json();
+        setBooks([...books, createdBook]); // Atualiza a lista local
+        setNewBook({ title: '', author: '', year: '' , description: ''}); // ✅ Limpa o formulário
+        alert('Livro criado com sucesso!');
+      } else {
+        throw new Error('Erro ao criar livro');
+      }
+    } catch (error) {
+      console.error('Erro:', error);
+      alert('Erro ao criar livro');
+    } finally {
+      setLoading(false); // ✅ Adicionado
+    }
+
+
+  };
+
+  // ✅ Adicionada função que estava faltando
+  const handleDeleteBook = async () => {
+    if (!deleteId) {
+      alert('Por favor, insira um ID válido.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/books/${deleteId}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        setBooks(books.filter(book => book.id !== parseInt(deleteId))); // Remove da lista local
+        setDeleteId(''); // ✅ Limpa o campo
+        alert('Livro deletado com sucesso');
+      } else if (response.status === 404) {
+        alert('Livro não encontrado');
+      } else {
+        throw new Error('Erro ao deletar livro');
+      }
+    } catch (error) {
+      console.error('Erro:', error);
+      alert('Erro ao deletar livro');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Corrigido: nome da função
+  useEffect(() => {
+    // Não carrega automaticamente, só quando usuário clicar em "Mostrar Todos"
+  }, []);
 
   return (
     <div className="container">
       <header className="header">
         <h1>Gerenciador de Livros</h1>
+        {loading && <div className="loading">🔄 Carregando...</div>} {/* ✅ Indicador global de loading */}
       </header>
 
       <main className="main-content">
         {/* Mostrar todos os livros */}
         <section className="section">
-          <button className="btn btn-primary" onClick={toggleShowAllBooks}>
+          <button className="btn btn-primary" onClick={toggleShowAllBooks} disabled={loading}>
             {showAllBooks ? 'Ocultar Livros' : 'Mostrar Todos os Livros'}
           </button>
           
@@ -72,6 +169,7 @@ function App() {
                     <h3>{book.title}</h3>
                     <p><strong>Autor:</strong> {book.author}</p>
                     <p><strong>Ano:</strong> {book.year}</p>
+                    <p><strong>Description:</strong> {book.description}</p>
                     <p><strong>ID:</strong> {book.id}</p>
                   </div>
                 ))
@@ -93,7 +191,7 @@ function App() {
               onChange={(e) => setSearchId(e.target.value)} 
               placeholder="Digite o ID do livro"
             />
-            <button className="btn btn-secondary" onClick={handleSearchById}>
+            <button className="btn btn-secondary" onClick={handleSearchById} disabled={loading}>
               Procurar
             </button>
           </div>
@@ -130,6 +228,17 @@ function App() {
               />
             </div>
             <div className="form-group">
+              <label htmlFor="description">Descrição:</label>
+              <input
+                type="text"
+                id="description"
+                value={newBook.description}
+                onChange={(e) => setNewBook({ ...newBook, description: e.target.value })}
+                className="input-field"
+                placeholder="Digite a descrição do livro"
+              />
+            </div>
+            <div className="form-group">
               <label htmlFor="author">Autor:</label>
               <input 
                 type="text" 
@@ -151,7 +260,7 @@ function App() {
                 placeholder="Digite o ano de publicação"
               />
             </div>
-            <button className="btn btn-success" onClick={handleCreateBook}>
+            <button className="btn btn-success" onClick={handleCreateBook} disabled={loading}>
               Criar Livro
             </button>
           </div>
@@ -168,7 +277,7 @@ function App() {
               onChange={(e) => setDeleteId(e.target.value)}
               placeholder="Digite o ID do livro para deletar"
             />
-            <button className="btn btn-danger" onClick={handleDeleteBook}>
+            <button className="btn btn-danger" onClick={handleDeleteBook} disabled={loading}>
               Deletar Livro
             </button>
           </div>

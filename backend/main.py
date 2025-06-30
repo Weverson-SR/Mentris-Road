@@ -1,10 +1,20 @@
 from fastapi import FastAPI, Depends, HTTPException
-import services as services, models as models, schemas as schemas
-from db import get_db, engine
+from fastapi.middleware.cors import CORSMiddleware
+from . import services, models, schemas
+from .database import get_db, engine
 from sqlalchemy.orm import Session
 
 # Inicializa a aplicação FastAPI
 app = FastAPI()
+
+# Configuração do CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Permite todas as origens
+    allow_credentials=True,
+    allow_methods=["*"],  # Permite todos os métodos HTTP
+    allow_headers=["*"],  # Permite todos os cabeçalhos
+)
 
 @app.get("/books/", response_model=list[schemas.Book])
 async def get_all_books(db: Session = Depends(get_db)):

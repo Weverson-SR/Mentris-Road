@@ -1,13 +1,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-from dotenv import load_dotenv
-import os
-
-# Carrega as variáveis de ambiente do arquivo .env
-load_dotenv()
 
 # URL de conexão com o banco de dados PostgreSQL
-URL_DATABASE = os.getenv("DATABASE_URL")
+URL_DATABASE = "postgresql://postgres:password@localhost:5432/bookstore"
 
 # Cria o motor de conexão com o banco de dados
 engine = create_engine(URL_DATABASE)

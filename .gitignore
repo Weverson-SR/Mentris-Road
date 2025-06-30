@@ -11,3 +11,10 @@ frontend/public/vite.svg
 frontend/src/index.css
 frontend/src/main.jsx
 frontend/src/assets/react.svg
+backend/__pycache__/__init__.cpython-312.pyc
+backend/__pycache__/database.cpython-312.pyc
+backend/__pycache__/db.cpython-312.pyc
+backend/__pycache__/main.cpython-312.pyc
+backend/__pycache__/models.cpython-312.pyc
+backend/__pycache__/schemas.cpython-312.pyc
+backend/__pycache__/services.cpython-312.pyc

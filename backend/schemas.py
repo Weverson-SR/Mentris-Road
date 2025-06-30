@@ -4,8 +4,8 @@ from pydantic import BaseModel
 class BookBase(BaseModel):
     title : str           # Título do livro
     author: str           # Autor do livro
-    description: str      # Descrição do livro
-    year: int             # Ano de publicação
+    description: str | None = None      # Descrição do livro
+    year: int | None = None            # Ano de publicação
 
 # Schema para criação de livro (herda de BookBase)
 class BookCreate(BookBase):
